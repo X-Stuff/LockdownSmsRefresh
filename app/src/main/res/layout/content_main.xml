@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <EditText
+        android:id="@+id/editTextSmsThreadName"
+        android:layout_width="0dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="5dp"
+        android:ems="10"
+        android:importantForAutofill="no"
+        android:inputType="textPersonName"
+        android:text="KORONA.BY"
+        app:layout_constraintEnd_toStartOf="@+id/inboxSwitch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/threadNameLabel" />
+
+    <SeekBar
+        android:id="@+id/timeOffset"
+        style="@android:style/Widget.Material.Light.SeekBar"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        android:layout_marginTop="15dp"
+        android:indeterminate="false"
+        android:max="120"
+        android:progress="10"
+        app:layout_constraintEnd_toStartOf="@+id/timeOffsetValueView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <Switch
+        android:id="@+id/inboxSwitch"
+        android:layout_width="100dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="11dp"
+        android:layout_marginEnd="15dp"
+        android:checked="true"
+        android:text="Inbox"
+        android:textAlignment="viewEnd"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/threadNameLabel"
+        tools:checked="true" />
+
+    <TextView
+        android:id="@+id/timeOffsetValueView"
+        android:layout_width="67dp"
+        android:layout_height="54dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="60"
+        android:textSize="36sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/threadNameLabel"
+        android:layout_width="0dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="38dp"
+        android:layout_marginEnd="15dp"
+        android:text="@string/sms_thread_name_hint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="45dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
+        android:text="@string/time_offset_hint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSmsThreadName" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

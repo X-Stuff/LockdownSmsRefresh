@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Horse Porn</string>
+    <string name="action_settings">Set as default SMS app</string>
+
+    <string name="hello_first_fragment">Hello first fragment</string>
+    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
+    <string name="time_offset_hint">Time offset (min. ago)</string>
+    <string name="sms_thread_name_hint">Inbox sms thread name</string>
+    <string name="outbox_sms_thread_name_hint">Outbox sms thread name</string>
+    <string name="inbox_text">Inbox</string>
+    <string name="outbox_text">Outbox</string>
+    <string name="sms_manager_explain_text">
+        In Android 5.0+ only SMS manager can modify the SMS database.
+        So you need to set this application as default SMS application on your phone before it can modify SMS.
+        Switch below shows if the application was set as default.
+        Use button to open settings.
+    </string>
+    <string name="alert_exit_dialog_sms_manager_message">SMS Manager wasn\'t changed!</string>
+    <string name="alert_exit_dialog_sms_manager_title">Warning!</string>
+</resources>
