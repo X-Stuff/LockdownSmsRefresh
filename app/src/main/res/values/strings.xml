@@ -20,4 +20,5 @@
     <string name="default_sms_thread">KORONA.BY</string>
     <string name="mode_name_edit">Edit last message mode</string>
     <string name="mode_name_send">Insert message mode</string>
+    <string name="debug">Debug</string>
 </resources>

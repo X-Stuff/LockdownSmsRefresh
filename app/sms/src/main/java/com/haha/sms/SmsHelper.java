@@ -12,10 +12,12 @@ import android.provider.Settings;
 import android.provider.Telephony;
 import android.util.Log;
 
+import java.util.Arrays;
 import java.util.Date;
 
 public class SmsHelper {
     private static final String LOG_TAG = "HP_SMS_MANAGER";
+    private static final String SIM_ID = "sim_id";
 
     public static int getThreadId(Context context, String threadName) throws Exception {
         String selection = String.format("UPPER(%s)=UPPER('%s')", Telephony.Sms.ADDRESS, threadName);
@@ -32,12 +34,26 @@ public class SmsHelper {
         }
     }
 
+    public static int getSimId(Context context, String threadName) {
+        String selection = String.format("UPPER(%s)=UPPER('%s')", Telephony.Sms.ADDRESS, threadName);
+
+        try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, selection, null, null)) {
+            if (cursor.moveToFirst()) {
+                if (Arrays.asList(cursor.getColumnNames()).contains(SIM_ID)) {
+                    int colIndex = cursor.getColumnIndex(SIM_ID);
+                    return cursor.getInt(colIndex);
+                }
+            }
+        }
+        return -1;
+    }
+
     public static int getLastSmsId(Context context, String smsAddress, boolean isInbox) throws Exception {
         int smsType = isInbox ? Telephony.Sms.MESSAGE_TYPE_INBOX : Telephony.Sms.MESSAGE_TYPE_SENT;
 
         @SuppressLint("DefaultLocale")
         String selection = String.format("UPPER(%s)=UPPER('%s') and %s=%d", Telephony.Sms.ADDRESS, smsAddress, Telephony.Sms.TYPE, smsType);
-        String order = String.format("%s", Telephony.Sms.DATE);
+        String order = String.format("%s DESC", Telephony.Sms.DATE);
 
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, selection, null, order)) {
             if (cursor.moveToFirst()) {
@@ -68,26 +84,11 @@ public class SmsHelper {
     }
 
     public static int insertSms(Context context, String threadName, String body, boolean isInbox, int minutesOffset) throws Exception {
-        long dateOffset = minutesOffset * 60 * 1000; // minutes in millis
+        return insertSms(context, threadName, false, body, isInbox, minutesOffset);
+    }
 
-        ContentValues values = new ContentValues();
-        values.put(Telephony.Sms.DATE_SENT, new Date().getTime() - dateOffset - 3325);
-        values.put(Telephony.Sms.DATE, new Date().getTime() - dateOffset);
-        values.put(Telephony.Sms.ADDRESS, threadName);
-        values.put(Telephony.Sms.BODY, body);
-        values.put(Telephony.Sms.THREAD_ID, getThreadId(context, threadName));
-        values.put(Telephony.Sms.TYPE, isInbox ? Telephony.Sms.MESSAGE_TYPE_INBOX : Telephony.Sms.MESSAGE_TYPE_SENT);
-        values.put(Telephony.Sms.STATUS, Telephony.Sms.STATUS_COMPLETE);
-
-        Uri result = context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
-
-        try (Cursor inserted = context.getContentResolver().query(result, null, null, null, null)) {
-            if (!inserted.moveToFirst()) {
-                throw new Exception("Sms insertion failed. Setup default SMS app.");
-            }
-
-            return  inserted.getInt(inserted.getColumnIndex(Telephony.Sms._ID));
-        }
+    public static int insertSms(Context context, String address, String body) throws Exception {
+        return insertSms(context, address, true, body, true, 0);
     }
 
     public static void dumpAllSms(Context context) {
@@ -106,7 +107,7 @@ public class SmsHelper {
         }
     }
 
-    public static boolean checkIsDefaultSmsManager(Context context) {
+    public static boolean isDefaultSmsManager(Context context) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             RoleManager roleManager = context.getSystemService(RoleManager.class);
             if (roleManager.isRoleAvailable(RoleManager.ROLE_SMS)) {
@@ -121,26 +122,62 @@ public class SmsHelper {
     }
 
     public static Intent createOpenDefaultSmsManagerIntent(Context context) {
-            Intent intent = null;
-            String packageName = context.getPackageName();
+        Intent intent = null;
+        String packageName = context.getPackageName();
 
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                RoleManager roleManager = context.getSystemService(RoleManager.class);
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            RoleManager roleManager = context.getSystemService(RoleManager.class);
 
-                if (roleManager.isRoleAvailable(RoleManager.ROLE_SMS)) {
-                    if (!roleManager.isRoleHeld(RoleManager.ROLE_SMS)) {
-                        intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS);
-                        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
-                    } else {
-                        intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
-                    }
+            if (roleManager.isRoleAvailable(RoleManager.ROLE_SMS)) {
+                if (!roleManager.isRoleHeld(RoleManager.ROLE_SMS)) {
+                    intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS);
+                    intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
+                } else {
+                    intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
                 }
-            } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+            }
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
 
-                intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
+            intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
+        }
+
+        return intent;
+    }
+
+    private static int insertSms(Context context, String threadName, boolean createThread, String body, boolean isInbox, int minutesOffset) throws Exception {
+        long dateOffset = minutesOffset * 60 * 1000; // minutes in millis
+
+        ContentValues values = new ContentValues();
+        values.put(Telephony.Sms.DATE_SENT, new Date().getTime() - dateOffset - 3325);
+        values.put(Telephony.Sms.DATE, new Date().getTime() - dateOffset);
+        values.put(Telephony.Sms.ADDRESS, threadName);
+        values.put(Telephony.Sms.BODY, body);
+        values.put(Telephony.Sms.TYPE, isInbox ? Telephony.Sms.MESSAGE_TYPE_INBOX : Telephony.Sms.MESSAGE_TYPE_SENT);
+        values.put(Telephony.Sms.STATUS, Telephony.Sms.STATUS_COMPLETE);
+
+        int simId = getSimId(context, threadName);
+        if (simId >= 0) {
+            values.put(SIM_ID, simId);
+        }
+
+        try {
+            values.put(Telephony.Sms.THREAD_ID, getThreadId(context, threadName));
+        } catch (Exception e) {
+            if (!createThread){
+                throw e;
+            }
+            Log.w(LOG_TAG, e.toString());
+        }
+
+        Uri result = context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
+
+        try (Cursor inserted = context.getContentResolver().query(result, null, null, null, null)) {
+            if (!inserted.moveToFirst()) {
+                throw new Exception("Sms insertion failed. Setup default SMS app.");
             }
 
-            return intent;
+            return inserted.getInt(inserted.getColumnIndex(Telephony.Sms._ID));
+        }
     }
 }
