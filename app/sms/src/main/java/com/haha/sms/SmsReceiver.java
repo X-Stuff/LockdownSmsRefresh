@@ -22,7 +22,7 @@ public class SmsReceiver extends BroadcastReceiver {
         if (SMS_RECEIVED.equals(intent.getAction())) {
             for (SmsMessage message : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
                 try {
-                    SmsHelper.insertSms(context, message.getOriginatingAddress(), message.getMessageBody());
+                    SmsHelper.receiveSms(context, message.getOriginatingAddress(), message.getMessageBody());
                     Toast.makeText(context, "New SMS received. Check it out after switching default app back.", 10).show();
                 } catch (Exception e) {
                     Log.e(LOG_TAG, e.toString());

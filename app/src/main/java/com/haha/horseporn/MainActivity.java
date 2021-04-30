@@ -7,9 +7,12 @@ import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.haha.sms.exceptions.SmsInsertionException;
 import com.haha.sms.SmsHelper;
+import com.haha.sms.exceptions.ThreadNotFoundException;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -83,22 +86,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void doSmsInsertion(View view, String threadName, String body, boolean isInbox, int minutesOffset) {
+    private void showMessage(View view, String message) {
+        Snackbar.make(view, message, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+    };
+
+    private void doSmsInsertion(View view, String threadName, String body, boolean isInbox, int minutesOffset, boolean createThread) {
         try {
             SettingsHelper.setThreadNameToSettings(MainActivity.this, threadName, isInbox);
             SettingsHelper.setTimeOffsetToSettings(MainActivity.this, minutesOffset);
             SettingsHelper.setMessageBodyToSettings(MainActivity.this, body, isInbox);
 
-            SmsHelper.insertSms(MainActivity.this, threadName, body, isInbox, minutesOffset);
+            SmsHelper.insertSms(MainActivity.this, threadName, createThread, body, isInbox, minutesOffset);
 
             Snackbar.make(view, "Done!", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
 
-        } catch (Exception e) {
+        } catch (ThreadNotFoundException threadNotFoundException) {
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Warning!")
+                    .setMessage(String.format("Cannot find thread named: %s. Create it?", threadNotFoundException.getThreadName()))
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        // do it again but create thread
+                        doSmsInsertion(view, threadName, body, isInbox, minutesOffset, true);
+                    })
+                    .setNegativeButton("Cancel", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .create()
+                    .show();
+        }
+        catch (SmsInsertionException sie) {
+            if (SmsHelper.isDefaultSmsManager(MainActivity.this)) {
+                showMessage(view, sie.getMessage());
+            } else {
+                showMessage(view, "Cannot insert SMS, try setup Default SMS app.");
+            }
+        }
+        catch (Exception e) {
             Log.e(LOG_TAG, e.toString());
-
-            Snackbar.make(view, "Exception: " + e.getMessage(), Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            showMessage(view,"Exception: " + e.getMessage());
         }
     }
 
@@ -172,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (modeSwitch.isChecked()) {
                 String messageBody = messageBodyText.getText().toString();
-                doSmsInsertion(v, threadName, messageBody, isInbox, timeOffsetString);
+                doSmsInsertion(v, threadName, messageBody, isInbox, timeOffsetString, false);
             }
             else {
                 doSmsModification(v, threadName, isInbox, timeOffsetString);

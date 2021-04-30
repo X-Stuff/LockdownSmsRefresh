@@ -12,6 +12,9 @@ import android.provider.Settings;
 import android.provider.Telephony;
 import android.util.Log;
 
+import com.haha.sms.exceptions.SmsInsertionException;
+import com.haha.sms.exceptions.ThreadNotFoundException;
+
 import java.util.Arrays;
 import java.util.Date;
 
@@ -19,17 +22,16 @@ public class SmsHelper {
     private static final String LOG_TAG = "HP_SMS_MANAGER";
     private static final String SIM_ID = "sim_id";
 
-    public static int getThreadId(Context context, String threadName) throws Exception {
+    public static int getThreadId(Context context, String threadName) throws ThreadNotFoundException {
         String selection = String.format("UPPER(%s)=UPPER('%s')", Telephony.Sms.ADDRESS, threadName);
-        String[] projection = new String[] { Telephony.Sms.THREAD_ID };
+        String[] projection = new String[]{Telephony.Sms.THREAD_ID};
 
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, projection, selection, null, null)) {
             if (cursor.moveToFirst()) {
                 int colIndex = cursor.getColumnIndex(Telephony.Sms.THREAD_ID);
                 return cursor.getInt(colIndex);
             } else {
-                throw new Exception(
-                        String.format("Cannot retrieve thread id for '%s'", threadName));
+                throw new ThreadNotFoundException(threadName);
             }
         }
     }
@@ -83,11 +85,7 @@ public class SmsHelper {
         return context.getContentResolver().update(Telephony.Sms.CONTENT_URI, values, query, null);
     }
 
-    public static int insertSms(Context context, String threadName, String body, boolean isInbox, int minutesOffset) throws Exception {
-        return insertSms(context, threadName, false, body, isInbox, minutesOffset);
-    }
-
-    public static int insertSms(Context context, String address, String body) throws Exception {
+    public static int receiveSms(Context context, String address, String body) throws Exception {
         return insertSms(context, address, true, body, true, 0);
     }
 
@@ -137,15 +135,16 @@ public class SmsHelper {
                 }
             }
         } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-
             intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
+            if (!isDefaultSmsManager(context)) {
+                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
+            }
         }
 
         return intent;
     }
 
-    private static int insertSms(Context context, String threadName, boolean createThread, String body, boolean isInbox, int minutesOffset) throws Exception {
+    public static int insertSms(Context context, String threadName, boolean createThread, String body, boolean isInbox, int minutesOffset) throws Exception {
         long dateOffset = minutesOffset * 60 * 1000; // minutes in millis
 
         ContentValues values = new ContentValues();
@@ -164,7 +163,7 @@ public class SmsHelper {
         try {
             values.put(Telephony.Sms.THREAD_ID, getThreadId(context, threadName));
         } catch (Exception e) {
-            if (!createThread){
+            if (!createThread) {
                 throw e;
             }
             Log.w(LOG_TAG, e.toString());
@@ -174,7 +173,7 @@ public class SmsHelper {
 
         try (Cursor inserted = context.getContentResolver().query(result, null, null, null, null)) {
             if (!inserted.moveToFirst()) {
-                throw new Exception("Sms insertion failed. Setup default SMS app.");
+                throw new SmsInsertionException("");
             }
 
             return inserted.getInt(inserted.getColumnIndex(Telephony.Sms._ID));
