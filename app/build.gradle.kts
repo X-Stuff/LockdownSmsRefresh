@@ -4,6 +4,11 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("C:\\tmp\\LockdownSmsRefresh\\my_keystore.jks")
+        }
+    }
     namespace = "com.tpd.smsrefresh"
     compileSdk = 34
 
@@ -21,6 +26,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            isJniDebuggable = false
         }
     }
     compileOptions {
