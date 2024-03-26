@@ -1,4 +1,4 @@
-package com.haha.horseporn;
+package com.tpd.smsrefresh;
 
 import android.content.Context;
 import android.content.SharedPreferences;

@@ -1,3 +1,0 @@
-include ':app:sms'
-include ':app'
-rootProject.name = "Horse Porn"

@@ -1,4 +1,4 @@
-package com.haha.sms;
+package com.tpd.sms;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,11 +23,11 @@ public class SmsReceiver extends BroadcastReceiver {
             for (SmsMessage message : Telephony.Sms.Intents.getMessagesFromIntent(intent)) {
                 try {
                     SmsHelper.receiveSms(context, message.getOriginatingAddress(), message.getMessageBody());
-                    Toast.makeText(context, "New SMS received. Check it out after switching default app back.", 10).show();
+                    Toast.makeText(context, "New SMS received. Check it out after switching default app back.", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {
                     Log.e(LOG_TAG, e.toString());
                     Toast.makeText(context, "Warning! SMS received whilst this app was set as manager. But wasn't stored!" +
-                            "It lost forever now :-(", 10)
+                            "It lost forever now :-(", Toast.LENGTH_SHORT)
                             .show();
                 }
             }

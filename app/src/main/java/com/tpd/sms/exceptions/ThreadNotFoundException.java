@@ -1,4 +1,4 @@
-package com.haha.sms.exceptions;
+package com.tpd.sms.exceptions;
 
 public class ThreadNotFoundException extends Exception {
     private final String threadName;

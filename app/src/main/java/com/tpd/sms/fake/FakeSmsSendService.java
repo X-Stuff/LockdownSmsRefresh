@@ -1,4 +1,4 @@
-package com.haha.sms.fake;
+package com.tpd.sms.fake;
 
 import android.app.Service;
 import android.content.Intent;

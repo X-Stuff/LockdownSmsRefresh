@@ -1,4 +1,4 @@
-package com.haha.sms;
+package com.tpd.sms;
 
 import android.annotation.SuppressLint;
 import android.app.role.RoleManager;
@@ -12,8 +12,8 @@ import android.provider.Settings;
 import android.provider.Telephony;
 import android.util.Log;
 
-import com.haha.sms.exceptions.SmsInsertionException;
-import com.haha.sms.exceptions.ThreadNotFoundException;
+import com.tpd.sms.exceptions.SmsInsertionException;
+import com.tpd.sms.exceptions.ThreadNotFoundException;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -27,7 +27,7 @@ public class SmsHelper {
         String[] projection = new String[]{Telephony.Sms.THREAD_ID};
 
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, projection, selection, null, null)) {
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 int colIndex = cursor.getColumnIndex(Telephony.Sms.THREAD_ID);
                 return cursor.getInt(colIndex);
             } else {
@@ -40,7 +40,7 @@ public class SmsHelper {
         String selection = String.format("UPPER(%s)=UPPER('%s')", Telephony.Sms.ADDRESS, threadName);
 
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, selection, null, null)) {
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 if (Arrays.asList(cursor.getColumnNames()).contains(SIM_ID)) {
                     int colIndex = cursor.getColumnIndex(SIM_ID);
                     return cursor.getInt(colIndex);
@@ -58,7 +58,7 @@ public class SmsHelper {
         String order = String.format("%s DESC", Telephony.Sms.DATE);
 
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, selection, null, order)) {
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 int idIndex = cursor.getColumnIndex(Telephony.Sms._ID);
                 return cursor.getInt(idIndex);
             } else {
@@ -74,7 +74,7 @@ public class SmsHelper {
 
         int lastSmsId = getLastSmsId(context, threadName, isInbox);
 
-        long dateOffset = minutesOffset * 60 * 1000; // minutes in millis
+        long dateOffset = (long) minutesOffset * 60 * 1000; // minutes in millis
 
         ContentValues values = new ContentValues();
         values.put(Telephony.Sms.DATE_SENT, new Date().getTime() - dateOffset - 3325);
@@ -91,7 +91,7 @@ public class SmsHelper {
 
     public static void dumpAllSms(Context context) {
         try (Cursor cursor = context.getContentResolver().query(Telephony.Sms.CONTENT_URI, null, null, null, null)) {
-            if (cursor.moveToFirst()) {
+            if (cursor != null && cursor.moveToFirst()) {
                 do {
                     StringBuilder msg = new StringBuilder();
 
@@ -111,7 +111,7 @@ public class SmsHelper {
             if (roleManager.isRoleAvailable(RoleManager.ROLE_SMS)) {
                 return roleManager.isRoleHeld(RoleManager.ROLE_SMS);
             }
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+        } else {
             String smsPackageName = Telephony.Sms.getDefaultSmsPackage(context);
             return context.getPackageName().equals(smsPackageName);
         }
@@ -134,7 +134,7 @@ public class SmsHelper {
                     intent = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
                 }
             }
-        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+        } else {
             intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
             if (!isDefaultSmsManager(context)) {
                 intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, packageName);
@@ -145,7 +145,7 @@ public class SmsHelper {
     }
 
     public static int insertSms(Context context, String threadName, boolean createThread, String body, boolean isInbox, int minutesOffset) throws Exception {
-        long dateOffset = minutesOffset * 60 * 1000; // minutes in millis
+        long dateOffset = (long) minutesOffset * 60 * 1000; // minutes in millis
 
         ContentValues values = new ContentValues();
         values.put(Telephony.Sms.DATE_SENT, new Date().getTime() - dateOffset - 3325);
@@ -170,13 +170,21 @@ public class SmsHelper {
         }
 
         Uri result = context.getContentResolver().insert(Telephony.Sms.CONTENT_URI, values);
+        if (result == null) {
+            throw new SmsInsertionException("Uri is null");
+        }
 
         try (Cursor inserted = context.getContentResolver().query(result, null, null, null, null)) {
-            if (!inserted.moveToFirst()) {
+            if (inserted == null || !inserted.moveToFirst()) {
                 throw new SmsInsertionException("");
             }
 
-            return inserted.getInt(inserted.getColumnIndex(Telephony.Sms._ID));
+            int index = inserted.getColumnIndex(Telephony.Sms._ID);
+            if (index < 0) {
+                throw new SmsInsertionException("Invalid index");
+            }
+
+            return inserted.getInt(index);
         }
     }
 }

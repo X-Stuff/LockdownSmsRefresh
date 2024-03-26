@@ -17,6 +17,7 @@
         android:importantForAutofill="no"
         android:inputType="textPersonName"
         android:text="@string/default_sms_thread"
+        android:hint="@string/sms_thread_name_hint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/threadNameLabel" />
@@ -35,14 +36,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/inboxSwitch"
         android:layout_width="100dp"
         android:layout_height="0dp"
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="4dp"
         android:checked="true"
-        android:text="Inbox"
+        android:text="@string/switch_inbox_text"
         android:textAlignment="viewEnd"
         app:layout_constraintBottom_toTopOf="@+id/editTextSmsThreadName"
         app:layout_constraintEnd_toEndOf="parent"
@@ -56,7 +57,7 @@
         android:layout_marginEnd="24dp"
         android:gravity="center"
         android:maxLines="1"
-        android:text="60"
+        android:text="@string/default_minutes_offset"
         android:textSize="36sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/textView" />
@@ -92,7 +93,8 @@
         android:layout_marginTop="35dp"
         android:layout_marginEnd="15dp"
         android:labelFor="@id/textViewSmsBody"
-        android:text="Sms body"
+        android:text="@string/sms_body_label_text"
+        android:hint="@string/sms_body_label_text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -110,6 +112,7 @@
         android:linksClickable="false"
         android:shadowDx="1"
         android:shadowDy="1"
+        android:autofillHints=""
         android:textAlignment="gravity"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintEnd_toEndOf="parent"
@@ -117,7 +120,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewHintSmsBody" />
 
-    <Switch
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switchMode"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

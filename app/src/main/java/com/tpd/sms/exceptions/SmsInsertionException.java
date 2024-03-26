@@ -1,4 +1,4 @@
-package com.haha.sms.exceptions;
+package com.tpd.sms.exceptions;
 
 import java.util.Objects;
 

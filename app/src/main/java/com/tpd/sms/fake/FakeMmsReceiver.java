@@ -1,4 +1,4 @@
-package com.haha.sms.fake;
+package com.tpd.sms.fake;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
