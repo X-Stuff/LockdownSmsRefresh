@@ -6,7 +6,7 @@ plugins {
 android {
     signingConfigs {
         getByName("debug") {
-            storeFile = file("C:\\tmp\\LockdownSmsRefresh\\my_keystore.jks")
+            storeFile = file("C:\\tmp\\LockdownSmsRefresh\\keystore.jks")
         }
     }
     namespace = "com.tpd.smsrefresh"
